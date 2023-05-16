@@ -23,6 +23,7 @@ while getopts ":h" option; do
    esac
 done
 
+# TODO: set output path as required arg
 
 # combine path to single file
 name="$1"
@@ -45,7 +46,7 @@ cd-hit \
   -o "$cd_hit_output"\
   -c 0.4 \
   -n 2 \
-  -b 0 \
+  -M 0 \
   -T 0 \
   -d 100 &&
 echo "CD-Hit Output File: $cd_hit_output"
