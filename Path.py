@@ -1,53 +1,11 @@
-import argparse
 import itertools
 import logging
-from datetime import datetime
 import subprocess
-import sys
 from pathlib import Path
 
 import pandas as pd
 from Bio import SeqIO
 from sklearn.cluster import DBSCAN
-
-LOGGING_FORMAT = "%(levelname)-8s :: %(asctime)s :: %(message)s"
-logging.basicConfig(format=LOGGING_FORMAT, filename=f"{datetime.now()}.log", level=logging.INFO)
-
-
-def get_args():
-    parser = argparse.ArgumentParser(
-        description="Path Object to process and store information from .fasta inputs for further analysis/plotting"
-    )
-    parser.add_argument(
-        "-i",
-        "--input",
-        nargs='+',
-        required=True,
-        help="Input .fasta file(s)",
-    )
-    parser.add_argument(
-        "-n",
-        "--name",
-        nargs='?',
-        required=True,
-        help="Name of path (for saving outputs, labeling plots)",
-    )
-    parser.add_argument(
-        "-c",
-        "--cd-hit",
-        nargs='?',
-        required=True,
-        help="CD-Hit .clstr output file path"
-    )
-    parser.add_argument(
-        "-b",
-        "--blast",
-        nargs='?',
-        required=True,
-        help="Blastn output file using '-outfmt 7' formatting option"
-    )
-
-    return parser.parse_args()
 
 
 def call_cd_hit(input_file):
@@ -60,7 +18,7 @@ def call_cd_hit(input_file):
     )
     # raise an error if it failed
     if outfile_path_out.stderr:
-        logging.error(f'Error when calling cd-hit:')
+        logging.error(f"Error when calling cd-hit:")
         logging.error(outfile_path_out.stderr)
         raise RuntimeError(outfile_path_out.stderr)
 
@@ -71,7 +29,7 @@ def call_cd_hit(input_file):
 
 class PathObject:
     def __init__(self, path_name: str, input_files: list):
-        logging.info('Initializing PathObject...')
+        logging.info("Initializing PathObject...")
         self.path_name = path_name
         self.input_files = input_files
         self.seq_dict = {
@@ -83,7 +41,7 @@ class PathObject:
         }
 
         for file in input_files:
-            logging.info(f'Checking file: {file}')
+            logging.info(f"Checking file: {file}")
             file_path = Path(file)
             with open(file, "r") as file_handle:
                 for record in SeqIO.parse(file_handle, "fasta"):
@@ -105,7 +63,7 @@ class PathObject:
         #     self.cd_hit_files.append(call_cd_hit(Path(input_file).resolve().__str__()))
 
     def _calculate_k_mer_frequencies(self, size=4):
-        logging.info('calculating k-mer frequencies...')
+        logging.info("calculating k-mer frequencies...")
         nucleotides = ["A", "T", "C", "G"]
         a = ["".join(x) for x in list(itertools.product(nucleotides, repeat=size))]
         kmer_df = pd.DataFrame(columns=a)
@@ -158,28 +116,3 @@ class PathObject:
         df = pd.concat([info_df, dbscan_df, kmer_df], axis=1)
 
         return df
-
-
-def main():
-    args = get_args()
-    print(args.__dict__)
-    logging.info(args)
-
-    path_name = args.name
-    path_files = args.input
-
-    logging.info("path name: %s", path_name)
-    logging.info("path files: %s", path_files)
-
-    path_obj = PathObject(path_name, path_files)
-    info_df = path_obj.merge_tables()
-    # using class methods:
-    # get kmer_df
-    # get cd-hit-df
-    # merge dfs directly in main
-
-    print()
-
-
-if __name__ == "__main__":
-    sys.exit(main())
