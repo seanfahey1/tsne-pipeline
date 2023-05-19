@@ -46,9 +46,6 @@ class PathObject:
         self.df.set_index("index", inplace=True)
 
         self.kmer_df = self._calculate_k_mer_frequencies()
-        self.dbscan_df = self.cluster_dbscan()
-        self.cd_hit_clusters = self.parse_cd_hit_clusters()
-        self.blast_df = self.parse_blast_output()
 
         # self.cd_hit_files = []
         # for input_file in self.input_files:
@@ -106,7 +103,7 @@ class PathObject:
                 clusters[match] = i
 
         # TODO: fix this
-        
+
         cdhit_df = pd.DataFrame.from_dict(clusters, orient="columns").set_index("contig", inplace=True)
         return clusters
 
