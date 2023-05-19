@@ -67,4 +67,4 @@ echo "$truncated_blast_output"
 
 # call PathObject python file
 echo "Running python file..."
-./main.py -n "$name" -i "${@:2}" -b "$blast_outfile" -c "$cd_hit_output"
+./main.py -n "$name" -i "${@:2}" -b "$blast_outfile" -c "$cd_hit_output.clstr"
