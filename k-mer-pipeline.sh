@@ -57,7 +57,7 @@ blast_outfile="$basename.out"
 truncated_blast_output="$basename-truncated.out"
 
 # blast command for tsv formatted output
-blastn -db nt -query "$combined_fasta" -outfmt 7 -out "$blast_outfile"
+blastn -db nt -query "$combined_fasta" -outfmt 0 -out "$blast_outfile"
 
 # get header row plus all first matches for truncated output
 head -4 "$blast_outfile" | tail -1 > "$truncated_blast_output" && \

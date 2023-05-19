@@ -34,7 +34,7 @@ class PathObject:
         for file in input_files:
             logging.info(f"Checking file: {file}")
             file_path = Path(file)
-            with open(file, "r") as file_handle:
+            with open(file_path, "r") as file_handle:
                 for record in SeqIO.parse(file_handle, "fasta"):
                     self.seq_dict["input_file"].append(file_path.name)
                     self.seq_dict["index"].append(record.id)
@@ -86,8 +86,8 @@ class PathObject:
         dbscan_result = DBSCAN(eps=0.2, min_samples=1).fit(self.kmer_df.to_numpy())
         dbscan_clusters = dbscan_result.labels_
         dbscan_df = pd.DataFrame.from_dict(
-            {"index": list(index), "dbscan_cluster": dbscan_clusters}, orient="columns"
-        ).set_index("index", inplace=True)
+            {"index": list(index), "dbscan_cluster": list(dbscan_clusters)}, orient="columns"
+        ).set_index("index")
 
         return dbscan_df
 
@@ -104,7 +104,7 @@ class PathObject:
 
         # TODO: fix this
 
-        cdhit_df = pd.DataFrame.from_dict(clusters, orient="columns").set_index("contig", inplace=True)
+        cdhit_df = pd.DataFrame.from_dict(clusters, orient="columns").set_index("contig")
         return clusters
 
     def blast_df(self):
@@ -127,9 +127,14 @@ class PathObject:
             section = section.strip()
             blast_results['contig'].append(section[:section.find(' ')])
 
-            table_str = re.search(r'Value\s*(.*?)\s*\n>', section).group(1)
-            table = [r.strip() for r in table_str.split('\n')]
-            blast_results['blast_text'] = table_str
+            table_str = re.search(r'Value\s*(.*?)\s*\n>', section)
+            if table_str:
+                table_str = table_str.group(1)
+                table = [r.strip() for r in table_str.split('\n')]
+                blast_results['blast_text'].append(table_str)
+            else:
+                table = ()
+                blast_results['blast_text'].append('')
 
             phage = 0
             human = 0
@@ -147,7 +152,7 @@ class PathObject:
             blast_results['macrophage'].append(macrophage)
             blast_results['hits'].append(len(table))
 
-            if human > 0 or macrophage > 0 :
+            if human > 0 or macrophage > 0:
                 assignment = 'drop'
             elif phage > 0:
                 assignment = 'phage'
@@ -155,16 +160,8 @@ class PathObject:
                 assignment = 'not-phage'
             blast_results['assignment'].append(assignment)
 
-        blast_df = pd.DataFrame.from_dict(blast_results, orient="columns").set_index("contig", inplace=True)
+        blast_df = pd.DataFrame.from_dict(blast_results, orient="columns").set_index("contig")
 
-        return blast_df
+        mask = blast_df['assignment'] == 'drop'
 
-    def merge_tables(self):
-        logging.info("Merging outputs...")
-        kmer_df = self.kmer_df
-        dbscan_df = self.dbscan_df
-        info_df = self.df
-
-        df = pd.concat([info_df, dbscan_df, kmer_df], axis=1)
-
-        return df
+        return blast_df, mask

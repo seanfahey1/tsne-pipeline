@@ -33,7 +33,7 @@ def get_args():
     )
     parser.add_argument(
         "-c",
-        "--cd-hit",
+        "--cdhit",
         nargs="?",
         required=True,
         help="CD-Hit .clstr output file path",
@@ -56,12 +56,15 @@ def main():
 
     path_name = args.name
     path_files = args.input
+    blast_file = args.blast
+    cdhit_file = args.cdhit
 
     logging.info("path name: %s", path_name)
     logging.info("path files: %s", path_files)
 
-    path_obj = PathObject(path_name, path_files)
-    info_df = path_obj.merge_tables()
+    path_obj = PathObject(path_name, path_files, blast_file, cdhit_file)
+    # info_df = path_obj.merge_tables()
+    b_mask = path_obj.blast_df()
     # using class methods:
     # get kmer_df
     # get cd-hit-df
